@@ -96,7 +96,7 @@ public class Menu {
             String input = scanner.nextLine();
 
             if (input.equals("0")) {
-                break; // Sale del ciclo para ir a cobrar
+                break; //sale del ciclo para ir a cobrar
             }
 
             int productId;
@@ -120,7 +120,7 @@ public class Menu {
             try {
                 quantity = Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
-                System.out.println("⚠ Cantidad inválida.");
+                System.out.println("Cantidad inválida.");
                 continue;
             }
 
@@ -134,9 +134,15 @@ public class Menu {
                 continue;
             }
 
-            // ¡Acá está la magia! Le pasamos el producto a la venta.
-            // La venta internamente crea el SaleDetail y calcula si hay descuento.
-            currentSale.addProductToSale(product, quantity);
+            String affiliateNumber = null;
+
+            if (product.isPrescriptionRequired()) {
+                System.out.println("\n[ATENCIÓN] Este producto requiere receta médica.");
+                System.out.print("Ingrese el número de afiliado de la Obra Social (o presione Enter si no tiene): ");
+                affiliateNumber = scanner.nextLine().trim();
+            }
+
+            currentSale.addProductToSale(product, quantity, affiliateNumber);
             System.out.println("Producto agregado al ticket.");
         }
 
@@ -160,7 +166,7 @@ public class Menu {
         System.out.printf("TOTAL FINAL: $%.2f\n", currentSale.getTotal());
         System.out.println("========================================");
 
-        System.out.print("\n¿Confirmar venta e imprimir ticket? (S/N): ");
+        System.out.print("\n¿Confirmar venta? (S/N): ");
         String confirm = scanner.nextLine();
 
         if (confirm.equalsIgnoreCase("S")) {

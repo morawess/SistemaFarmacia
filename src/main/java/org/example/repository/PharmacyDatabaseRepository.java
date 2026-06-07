@@ -56,7 +56,7 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
 
     @Override
     public Product getProductById(int id) {
-        String sql = "SELECT id, name, price, stock, product_type FROM Product WHERE id = ?";
+        String sql = "SELECT id, name, price, stock, product_type, health_insurance_discount FROM Product WHERE id = ?";
         Product product = null;
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -71,11 +71,12 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
                     String name = rs.getString("name");
                     double price = rs.getDouble("price");
                     int stock = rs.getInt("stock");
+                    double hiDiscount = rs.getDouble("health_insurance_discount");
 
                     if ("OTC".equalsIgnoreCase(type)) {
                         product = new OTCProduct(prodId, name, price, stock);
                     } else {
-                        product = new PrescriptionProduct(prodId, name, price, stock);
+                        product = new PrescriptionProduct(prodId, name, price, stock, hiDiscount);
                     }
                 }
             }
@@ -89,7 +90,7 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
     @Override
     public void processSale(Sale sale) {
         String insertSaleSql = "INSERT INTO Sale (client_id, total) VALUES (?, ?)";
-        String insertDetailSql = "INSERT INTO SaleDetail (sale_id, product_id, quantity, unit_price, subtotal, discount_amount, final_total) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertDetailSql = "INSERT INTO SaleDetail (sale_id, product_id, quantity, unit_price, subtotal, discount_amount, final_total, affiliate_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         String updateStockSql = "UPDATE Product SET stock = stock - ? WHERE id = ?";
 
         Connection conn = null;
@@ -130,6 +131,11 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
                     pstmtDetail.setDouble(5, detail.getSubtotal());
                     pstmtDetail.setDouble(6, detail.getDiscountAmount());
                     pstmtDetail.setDouble(7, detail.getFinalTotal());
+                    if (detail.getAffiliateNumber() != null && !detail.getAffiliateNumber().isEmpty()) {
+                        pstmtDetail.setString(8, detail.getAffiliateNumber());
+                    } else {
+                        pstmtDetail.setNull(8, java.sql.Types.VARCHAR);
+                    }
                     pstmtDetail.executeUpdate();
 
                     pstmtStock.setInt(1, detail.getQuantity());

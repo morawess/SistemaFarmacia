@@ -16,8 +16,8 @@ public class Sale {
         this.saleDate = LocalDateTime.now();
     }
 
-    public void addProductToSale(Product product, int quantity) {//este metodo agrega un producto a la venta y actualiza el total automáticamente
-        SaleDetail newDetail = new SaleDetail(product, quantity, this.client);
+    public void addProductToSale(Product product, int quantity, String affiliateNumber) {//este metodo agrega un producto a la venta y actualiza el total automáticamente
+        SaleDetail newDetail = new SaleDetail(product, quantity, this.client, affiliateNumber);
         this.details.add(newDetail);
         
         calculateTotal();
