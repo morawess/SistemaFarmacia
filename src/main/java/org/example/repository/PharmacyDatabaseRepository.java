@@ -1,8 +1,6 @@
 package org.example.repository;
 
-import org.example.model.Client;
-import org.example.model.Product;
-import org.example.model.Sale;
+import org.example.model.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -58,7 +56,7 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
 
     @Override
     public Product getProductById(int id) {
-        String sql = "SELECT id, name, price, stock FROM Product WHERE id = ?";
+        String sql = "SELECT id, name, price, stock, product_type FROM Product WHERE id = ?";
         Product product = null;
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -67,25 +65,31 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
             pstmt.setInt(1, id);
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) { //si cuentra el producto rs.next es true
-                    product = new Product(
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getDouble("price"),
-                            rs.getInt("stock")
-                    );
+                if (rs.next()) {
+                    String type = rs.getString("product_type");
+                    int prodId = rs.getInt("id");
+                    String name = rs.getString("name");
+                    double price = rs.getDouble("price");
+                    int stock = rs.getInt("stock");
+
+                    if ("OTC".equalsIgnoreCase(type)) {
+                        product = new OTCProduct(prodId, name, price, stock);
+                    } else {
+                        product = new PrescriptionProduct(prodId, name, price, stock);
+                    }
                 }
             }
         } catch (SQLException e) {
             System.out.println("Error al consultar producto: " + e.getMessage());
         }
 
-        return product; //si no lo encuentra devuelve null
+        return product;
     }
 
     @Override
-    public void processSale(Sale sale, int productId, int quantity) {
+    public void processSale(Sale sale) {
         String insertSaleSql = "INSERT INTO Sale (client_id, total) VALUES (?, ?)";
+        String insertDetailSql = "INSERT INTO SaleDetail (sale_id, product_id, quantity, unit_price, subtotal, discount_amount, final_total) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String updateStockSql = "UPDATE Product SET stock = stock - ? WHERE id = ?";
 
         Connection conn = null;
@@ -94,24 +98,51 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
             conn = DatabaseManager.getConnection();
             conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmtSale = conn.prepareStatement(insertSaleSql)) {
-                pstmtSale.setInt(1, sale.getClientId());
+            int generatedSaleId = 0;
+
+            try (PreparedStatement pstmtSale = conn.prepareStatement(insertSaleSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                if (sale.getClient() != null) {
+                    pstmtSale.setInt(1, sale.getClient().getId());
+                } else {
+                    pstmtSale.setNull(1, java.sql.Types.INTEGER); //cliente no registrado
+                }
                 pstmtSale.setDouble(2, sale.getTotal());
                 pstmtSale.executeUpdate();
+
+                try (ResultSet generatedKeys = pstmtSale.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        generatedSaleId = generatedKeys.getInt(1);
+                    } else {
+                        throw new SQLException("No se pudo obtener el ID de la Venta.");
+                    }
+                }
             }
 
-            try (PreparedStatement pstmtStock = conn.prepareStatement(updateStockSql)) {
-                pstmtStock.setInt(1, quantity);
-                pstmtStock.setInt(2, productId);
-                pstmtStock.executeUpdate();
+            try (PreparedStatement pstmtDetail = conn.prepareStatement(insertDetailSql);
+                 PreparedStatement pstmtStock = conn.prepareStatement(updateStockSql)) {
+
+                for (SaleDetail detail : sale.getDetails()) {
+                    // Guardar el renglón
+                    pstmtDetail.setInt(1, generatedSaleId);
+                    pstmtDetail.setInt(2, detail.getProduct().getId());
+                    pstmtDetail.setInt(3, detail.getQuantity());
+                    pstmtDetail.setDouble(4, detail.getUnitPrice());
+                    pstmtDetail.setDouble(5, detail.getSubtotal());
+                    pstmtDetail.setDouble(6, detail.getDiscountAmount());
+                    pstmtDetail.setDouble(7, detail.getFinalTotal());
+                    pstmtDetail.executeUpdate();
+
+                    pstmtStock.setInt(1, detail.getQuantity());
+                    pstmtStock.setInt(2, detail.getProduct().getId());
+                    pstmtStock.executeUpdate();
+                }
             }
 
             conn.commit();
-            System.out.println("Venta registrada y stock actualizado con éxito en la base de datos");
+            System.out.println("Venta registrada y stock actualizado con exito en la BD.");
 
         } catch (SQLException e) {
-            //si algo falla abortamos misión y deshacemos los cambios (rollback)
-            System.out.println("Ocurrió un error en la venta. Deshaciendo cambios: " + e.getMessage());
+            System.out.println("Ocurrio un error en la venta. Deshaciendo cambios: " + e.getMessage());
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -120,10 +151,9 @@ public class PharmacyDatabaseRepository implements ClientManageable, ProductCons
                 }
             }
         } finally {
-            //la cerramos al terminar
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(true); //se restaura el comportamiento default de mysql
+                    conn.setAutoCommit(true);
                     conn.close();
                 } catch (SQLException ex) {
                     System.out.println("Error al cerrar la conexión: " + ex.getMessage());

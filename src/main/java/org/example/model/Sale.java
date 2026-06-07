@@ -1,61 +1,42 @@
 package org.example.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Sale {
     private int id;
-    private int clientId;
+    private Client client;
     private LocalDateTime saleDate;
-    private double total;
+    private List<SaleDetail> details; //lista de los saleDetails, es decir, los distintos productos comprados
+    private double total; //suma todos los renglones/saleDetails
 
     public Sale() {
+        this.details = new ArrayList<>();
+        this.saleDate = LocalDateTime.now();
     }
 
-    public Sale(int clientId, LocalDateTime saleDate, double total) {
-        this.clientId = clientId;
-        this.saleDate = saleDate;
-        this.total = total;
+    public void addProductToSale(Product product, int quantity) {//este metodo agrega un producto a la venta y actualiza el total automáticamente
+        SaleDetail newDetail = new SaleDetail(product, quantity, this.client);
+        this.details.add(newDetail);
+        
+        calculateTotal();
     }
 
-    public Sale(int id, int clientId, LocalDateTime saleDate, double total) {
-        this.id = id;
-        this.clientId = clientId;
-        this.saleDate = saleDate;
-        this.total = total;
+    private void calculateTotal() {
+        this.total = 0.0;
+        for (SaleDetail detail : details) {
+            this.total += detail.getFinalTotal();
+        }
     }
 
-    //getter y setters
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(int clientId) {
-        this.clientId = clientId;
-    }
-
-    public LocalDateTime getSaleDate() {
-        return saleDate;
-    }
-
-    public void setSaleDate(LocalDateTime saleDate) {
-        this.saleDate = saleDate;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public void setTotal(double total) {
-        this.total = total;
-    }
+    // Getters y Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public Client getClient() { return client; }
+    public void setClient(Client client) { this.client = client; }
+    public LocalDateTime getSaleDate() { return saleDate; }
+    public void setSaleDate(LocalDateTime saleDate) { this.saleDate = saleDate; }
+    public List<SaleDetail> getDetails() { return details; }
+    public double getTotal() { return total; }
 }
-
