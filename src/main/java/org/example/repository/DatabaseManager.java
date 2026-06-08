@@ -4,22 +4,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-/* DATABASE
---mySql--
-Host:
-Port: 3306
-User: root
-Password: 1234
-Schema: pharmacy_db
-URL: "jdbc:mysql://localhost:3306/pharmacy_db"
---cleverCloud--
-Host / Server: bchfxdzarqvf7eul6zrv-mysql.services.clever-cloud.com
-Port: 3306
-User: uhbkv3lake9esy6q
-Password: 25rKZQkn5gB48l8425IO
-Database: bchfxdzarqvf7eul6zrv
-URI: mysql://uhbkv3lake9esy6q:25rKZQkn5gB48l8425IO@bchfxdzarqvf7eul6zrv-mysql.services.clever-cloud.com:3306/bchfxdzarqvf7eul6zrv
- */
 
 public class DatabaseManager {
 

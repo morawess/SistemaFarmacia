@@ -2,14 +2,7 @@ package org.example.ui;
 
 import org.example.repository.PharmacyDatabaseRepository;
 import javax.swing.*;
-/* DATABASE
-Host / Server: bchfxdzarqvf7eul6zrv-mysql.services.clever-cloud.com
-Port: 3306
-User: uhbkv3lake9esy6q
-Password: 25rKZQkn5gB48l8425IO
-Database: bchfxdzarqvf7eul6zrv
-URI: mysql://uhbkv3lake9esy6q:25rKZQkn5gB48l8425IO@bchfxdzarqvf7eul6zrv-mysql.services.clever-cloud.com:3306/bchfxdzarqvf7eul6zrv
- */
+
 public class Main {
     public static void main(String[] args) {
 
