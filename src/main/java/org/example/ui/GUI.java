@@ -1,57 +1,41 @@
 package org.example.ui;
 
-import org.example.model.Product;
-import org.example.repository.ProductConsultable;
-
+import org.example.controller.ProductController;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class GUI {
-    private JPanel mainPanel;
+    private JPanel MainPanel;
     private JTextField txtProductId;
     private JButton btnBuscar;
     private JTextArea txtResultado;
+    private JPanel ProductPanel;
+    private JPanel ClientPanel;
+    private JPanel SalePanel;
+    private JTextField txtClientDni;
+    private JButton buscarButton;
+    private JTextField txtClientName;
+    private JButton agregarButton;
+    private JTextArea textArea1;
 
-    private ProductConsultable productConsultant;
+    // La vista ahora conoce al controlador, NO al repositorio
+    private ProductController controller;
 
-    public GUI(ProductConsultable productConsultant) {
-        this.productConsultant = productConsultant;
+    public GUI(ProductController controller) {
+        this.controller = controller;
 
         btnBuscar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                buscarProducto();
+                // Delegamos la tarea al controlador
+                String resultado = controller.searchProductInfo(txtProductId.getText());
+                txtResultado.setText(resultado);
             }
         });
     }
 
-    private void buscarProducto() {
-        try {
-            int id = Integer.parseInt(txtProductId.getText().trim());
-            Product product = productConsultant.getProductById(id);
-            if (product != null) {
-                String info = "Producto encontrado:\n\n" +
-                        "- Nombre: " + product.getName() + "\n" +
-                        "- Precio: $" + String.format("%.2f", product.getPrice()) + "\n" +
-                        "- Stock: " + product.getStock() + " unidades\n\n";
-
-                if (product.miFarmacityDiscount()) {
-                    info += "Promoción: Acepta descuento de Mi Farmacity";
-                } else {
-                    info += "⚕Promoción: NO acepta descuentos (Venta bajo receta)";
-                }
-
-                txtResultado.setText(info);
-            } else {
-                txtResultado.setText("No se encontró ningún producto con el ID " + id);
-            }
-        } catch (NumberFormatException ex) {
-            txtResultado.setText("Por favor, ingrese un número válido.");
-        }
-    }
-
     public JPanel getMainPanel() {
-        return mainPanel;
+        return MainPanel;
     }
 }

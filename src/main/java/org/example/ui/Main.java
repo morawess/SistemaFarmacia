@@ -1,27 +1,43 @@
 package org.example.ui;
 
+import org.example.controller.ClientController;
+import org.example.controller.ProductController;
+import org.example.controller.SaleController;
 import org.example.repository.PharmacyDatabaseRepository;
+
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-
         PharmacyDatabaseRepository repositorio = new PharmacyDatabaseRepository();
-        Menu menu = new Menu(repositorio, repositorio, repositorio);
 
-        menu.start();
+        ProductController productController = new ProductController(repositorio);
+        ClientController clientController = new ClientController(repositorio);
+        SaleController saleController = new SaleController(repositorio, repositorio, repositorio);
 
-        //PARA IMPLEMENTAR LA GUI (solo esta para buscar un producto)
+        //------CONSOLA
 
-//        JFrame frame = new JFrame("Consulta de Productos - Sistema Farmacia");
-//
-//        GUI pantalla = new GUI(repositorio);
-//
-//        frame.setContentPane(pantalla.getMainPanel());
+        //Menu menu = new Menu(repositorio, repositorio, repositorio);
+        //menu.start();
 
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        frame.setSize(450, 350);
-//        frame.setLocationRelativeTo(null);
-//        frame.setVisible(true);
+        //------INTERFAZ GRAFICA
+
+        JFrame mainFrame = new JFrame("Sistema de Gestión - Farmacity");
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setSize(800, 600);
+        mainFrame.setLocationRelativeTo(null);
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        ProductPanel productPanel = new ProductPanel(productController);
+        ClientPanel clientPanel = new ClientPanel(clientController);
+        SalePanel salePanel = new SalePanel(saleController);
+
+        tabbedPane.addTab("Ventas", salePanel.getMainPanel());
+        tabbedPane.addTab("Consultar Productos", productPanel.getMainPanel());
+        tabbedPane.addTab("Registrar Clientes", clientPanel.getMainPanel());
+
+        mainFrame.setContentPane(tabbedPane);
+        mainFrame.setVisible(true);
     }
 }
